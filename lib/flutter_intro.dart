@@ -36,8 +36,7 @@ class Intro extends InheritedWidget {
   static Offset _widgetOffset = const Offset(0, 0);
 
   static const EdgeInsets defaultPadding = EdgeInsets.all(8);
-  static const BorderRadius defaultBorderRadius =
-      BorderRadius.all(Radius.circular(4));
+  static const BorderRadius defaultBorderRadius = BorderRadius.all(Radius.circular(4));
   static const Color defaultMaskColor = Color.fromRGBO(0, 0, 0, .6);
   static const bool defaultAnimate = false;
   static const Duration defaultAnimationDuration = Duration(milliseconds: 300);
@@ -45,8 +44,7 @@ class Intro extends InheritedWidget {
 
   final List<String> _finishedGroups = [];
 
-  final _Throttling _th =
-      _Throttling(duration: const Duration(milliseconds: 500));
+  final _Throttling _th = _Throttling(duration: const Duration(milliseconds: 500));
 
   /// [Map] of all steps that need to be displayed. This is generated with
   /// first-frame callbacks on routes (see `intro_step_builder.dart`).
@@ -76,8 +74,7 @@ class Intro extends InheritedWidget {
   /// [ValueNotifier] of [IntroStatus], which can be used with
   /// [ValueListenableBuilder] for instant UI updates. See readme for example.
   /// Default is not open.
-  final ValueNotifier<IntroStatus> statusNotifier =
-      ValueNotifier(IntroStatus(isOpen: false));
+  final ValueNotifier<IntroStatus> statusNotifier = ValueNotifier(IntroStatus(isOpen: false));
 
   /// Nullable [Function], with [int] parameter for step `order`, to build
   /// custom buttons for steps (default `null`)
@@ -91,6 +88,10 @@ class Intro extends InheritedWidget {
   /// custom buttons for steps (default `null`)
   final IntroButtonConfig Function(int order)? buttonBuilder;
 
+  /// Nullable [Function], to build
+  /// custom buttons for skip (default `null`)
+  final IntroButtonConfig Function()? skipButtonBuilder;
+
   /// Constructor for [Intro] widget, requiring only [child] but with further
   /// customization available
   Intro({
@@ -101,6 +102,7 @@ class Intro extends InheritedWidget {
     this.noAnimation = defaultAnimate,
     this.maskClosable = defaultMaskClosable,
     this.buttonBuilder,
+    this.skipButtonBuilder,
     @Deprecated(
       'Use [buttonBuilder] instead'
       'This feature was deprecated after v3.3.0. Will be removed in v4.0.0',
@@ -122,15 +124,11 @@ class Intro extends InheritedWidget {
 
   /// Get [bool] for whether the step has one following it, judged by if there
   /// is a step with a higher `order` value detected.
-  bool get hasNextStep =>
-      _currentStep == null ||
-      _steps.where((e) => e.order > _currentStep!.order).isNotEmpty;
+  bool get hasNextStep => _currentStep == null || _steps.where((e) => e.order > _currentStep!.order).isNotEmpty;
 
   /// Get [bool] for whether the step has one before it, judged by if there
   /// is a step with a lower `order` value detected.
-  bool get hasPrevStep =>
-      _currentStep != null &&
-      _steps.firstWhereOrNull((e) => e.order < _currentStep!.order) != null;
+  bool get hasPrevStep => _currentStep != null && _steps.firstWhereOrNull((e) => e.order < _currentStep!.order) != null;
 
   /// Return nullable [IntroStepBuilder] for the next step in the sequence as
   /// compared to [_currentStep].
@@ -145,8 +143,7 @@ class Intro extends InheritedWidget {
 
     if (_currentStep == null) return steps.firstOrNull;
 
-    return steps.firstWhereOrNull(
-        (IntroStepBuilder s) => s.order > _currentStep!.order);
+    return steps.firstWhereOrNull((IntroStepBuilder s) => s.order > _currentStep!.order);
   }
 
   /// Return nullable [IntroStepBuilder] for the previous step in the sequence
@@ -233,9 +230,7 @@ class Intro extends InheritedWidget {
     bool isUpdate = false,
     bool reverse = false,
   }) {
-    IntroStepBuilder? step = reverse
-        ? _getPrevStep(isUpdate: isUpdate)
-        : _getNextStep(isUpdate: isUpdate);
+    IntroStepBuilder? step = reverse ? _getPrevStep(isUpdate: isUpdate) : _getNextStep(isUpdate: isUpdate);
     _currentStep = step;
 
     if (step == null) {
@@ -262,10 +257,8 @@ class Intro extends InheritedWidget {
       renderBox.size.height + (step.padding?.vertical ?? padding.vertical),
     );
     _widgetOffset = Offset(
-      renderBox.localToGlobal(Offset.zero).dx -
-          (step.padding?.left ?? padding.left),
-      renderBox.localToGlobal(Offset.zero).dy -
-          (step.padding?.top ?? padding.top),
+      renderBox.localToGlobal(Offset.zero).dx - (step.padding?.left ?? padding.left),
+      renderBox.localToGlobal(Offset.zero).dy - (step.padding?.top ?? padding.top),
     );
 
     OverlayPosition position = step.getOverlayPosition != null
@@ -337,17 +330,26 @@ class Intro extends InheritedWidget {
                   const SizedBox(
                     height: 12,
                   ),
-                  buttonBuilder != null
-                      ? IntroButton.fromConfig(
-                          config: buttonBuilder!(step.order),
-                          onPressed: _render,
-                        )
-                      : IntroButton(
-                          text: buttonTextBuilder == null
-                              ? 'Next'
-                              : buttonTextBuilder!(step.order),
-                          onPressed: _render,
-                        ),
+                  Row(
+                    children: [
+                      buttonBuilder != null
+                          ? IntroButton.fromConfig(
+                              config: buttonBuilder!(step.order),
+                              onPressed: _render,
+                            )
+                          : IntroButton(
+                              text: buttonTextBuilder == null ? 'Next' : buttonTextBuilder!(step.order),
+                              onPressed: _render,
+                            ),
+                      const SizedBox(width: 8),
+                      skipButtonBuilder != null
+                          ? IntroButton.fromConfig(
+                              config: skipButtonBuilder!(),
+                              onPressed: _onFinish,
+                            )
+                          : const SizedBox.shrink(),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -369,8 +371,7 @@ class Intro extends InheritedWidget {
       builder: (BuildContext context) {
         Size currentScreenSize = MediaQuery.of(context).size;
 
-        if (_screenSize.width != currentScreenSize.width ||
-            _screenSize.height != currentScreenSize.height) {
+        if (_screenSize.width != currentScreenSize.width || _screenSize.height != currentScreenSize.height) {
           _screenSize = currentScreenSize;
 
           _th.throttle(() {
@@ -415,8 +416,7 @@ class Intro extends InheritedWidget {
                         height: _widgetSize.height,
                         left: _widgetOffset.dx,
                         top: _widgetOffset.dy,
-                        borderRadiusGeometry:
-                            _currentStep?.borderRadius ?? borderRadius,
+                        borderRadiusGeometry: _currentStep?.borderRadius ?? borderRadius,
                         onTap: _currentStep?.onHighlightWidgetTap,
                       ),
                     ],
