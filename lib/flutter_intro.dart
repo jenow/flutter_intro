@@ -331,6 +331,12 @@ class Intro extends InheritedWidget {
                     height: 12,
                   ),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: position.crossAxisAlignment == CrossAxisAlignment.start
+                        ? MainAxisAlignment.start
+                        : position.crossAxisAlignment == CrossAxisAlignment.end
+                            ? MainAxisAlignment.end
+                            : MainAxisAlignment.center,
                     children: [
                       buttonBuilder != null
                           ? IntroButton.fromConfig(
