@@ -74,7 +74,7 @@ class Intro extends InheritedWidget {
   /// [ValueNotifier] of [IntroStatus], which can be used with
   /// [ValueListenableBuilder] for instant UI updates. See readme for example.
   /// Default is not open.
-  final ValueNotifier<IntroStatus> statusNotifier = ValueNotifier(IntroStatus(isOpen: false));
+  final ValueNotifier<IntroStatus> statusNotifier = ValueNotifier(IntroStatus(isOpen: false, currentStep: 0));
 
   /// Nullable [Function], with [int] parameter for step `order`, to build
   /// custom buttons for steps (default `null`)
@@ -165,7 +165,7 @@ class Intro extends InheritedWidget {
   /// Store [overlayEntry] and update [statusNotifier].
   void _setOverlay(OverlayEntry? overlayEntry) {
     _overlayEntry = overlayEntry;
-    statusNotifier.value = IntroStatus(isOpen: overlayEntry != null);
+    statusNotifier.value = IntroStatus(isOpen: overlayEntry != null, currentStep: _currentStep?.order ?? 0);
   }
 
   /// Return [Widget] using various parameters
